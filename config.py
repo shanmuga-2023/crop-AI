@@ -10,13 +10,17 @@ class Config:
     """Base configuration."""
     SECRET_KEY = os.environ.get('SECRET_KEY', 'crop-disease-expert-system-secret-key')
 
+    # Detect serverless environment (e.g., Vercel / AWS Lambda)
+    IS_SERVERLESS = bool(os.environ.get('VERCEL') or os.environ.get('AWS_LAMBDA_FUNCTION_NAME'))
+    STORAGE_DIR = '/tmp' if IS_SERVERLESS else BASE_DIR
+
     # Upload settings
-    UPLOAD_FOLDER = os.path.join(BASE_DIR, 'uploads')
+    UPLOAD_FOLDER = os.path.join(STORAGE_DIR, 'uploads')
     MAX_CONTENT_LENGTH = 16 * 1024 * 1024  # 16 MB max upload
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'webp', 'bmp'}
 
     # Database
-    DATABASE_PATH = os.path.join(BASE_DIR, 'database', 'diagnoses.db')
+    DATABASE_PATH = os.path.join(STORAGE_DIR, 'database', 'diagnoses.db')
 
     # Model settings
     MODEL_WEIGHTS_PATH = os.path.join(BASE_DIR, 'models', 'weights', 'resnet50_plantvillage.h5')
@@ -30,7 +34,7 @@ class Config:
     KNOWLEDGE_BASE_PATH = os.path.join(BASE_DIR, 'expert_system', 'knowledge', 'diseases.json')
 
     # Grad-CAM output
-    GRADCAM_OUTPUT_DIR = os.path.join(BASE_DIR, 'static', 'gradcam_outputs')
+    GRADCAM_OUTPUT_DIR = os.path.join(STORAGE_DIR, 'static', 'gradcam_outputs') if IS_SERVERLESS else os.path.join(BASE_DIR, 'static', 'gradcam_outputs')
 
     # PlantVillage class labels (38 classes)
     CLASS_LABELS = [

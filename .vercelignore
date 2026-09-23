@@ -1,0 +1,17 @@
+# Ignore dataset & large files on Vercel serverless builds
+PlantVillage/
+dataset/
+datasets/
+data/
+venv/
+.venv/
+env/
+__pycache__/
+*.pyc
+.pytest_cache/
+tests/
+database/*.db
+uploads/*
+!uploads/.gitkeep
+training/
+.DS_Store

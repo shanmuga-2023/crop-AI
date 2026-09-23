@@ -68,6 +68,11 @@ def create_app():
         """Serve uploaded images."""
         return send_from_directory(Config.UPLOAD_FOLDER, filename)
 
+    @app.route('/static/gradcam_outputs/<filename>')
+    def gradcam_file(filename):
+        """Serve generated Grad-CAM heatmaps and overlays."""
+        return send_from_directory(Config.GRADCAM_OUTPUT_DIR, filename)
+
     @app.route('/api/model-info')
     def model_info():
         """Return model information."""
@@ -86,8 +91,11 @@ def create_app():
     return app
 
 
+# WSGI application instance for Gunicorn / Vercel / Render
+app = create_app()
+
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 5001))
-    app = create_app()
     app.run(debug=True, host='0.0.0.0', port=port)
+
 
