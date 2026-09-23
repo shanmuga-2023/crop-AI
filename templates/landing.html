@@ -1,0 +1,358 @@
+{% extends "base.html" %}
+
+{% block title %}CropAI Expert — Precision Foliar Pathology & Diagnostic Engine{% endblock %}
+{% block meta_description %}Explainable decision-support platform for crop disease diagnosis. Combines transfer learning CNNs, Grad-CAM visual heatmaps, pixel-level severity quantification, and rule-based agronomic inference.{% endblock %}
+
+{% block content %}
+<!-- ========== ASYMMETRIC EDITORIAL HERO ========== -->
+<section class="hero-editorial" id="heroSection">
+    <div class="container">
+        <div class="hero-grid-split">
+            <!-- Left Editorial Lead -->
+            <div class="hero-lead-col">
+                <div class="hero-kicker">
+                    <span class="mono-data">v2.4 Core</span>
+                    <span>•</span>
+                    <span>Agronomic Decision Support</span>
+                </div>
+                
+                <h1 class="hero-h1">
+                    Precision foliar pathology through <em>explainable intelligence</em>.
+                </h1>
+                
+                <p class="hero-body-p">
+                    Standard classifiers only output an isolated label. CropAI functions as a complete 
+                    pathology workbench — identifying pathogens, isolating infected tissue via color-space segmentation, 
+                    and executing forward-chaining rules against environmental micro-climates.
+                </p>
+
+                <div class="hero-interaction-group">
+                    <a href="/diagnose" class="btn-primary-action hero-btn-primary" id="heroLaunchBtn">
+                        <span>Launch Diagnostic Lab</span>
+                        <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75">
+                            <path d="M3 8h10M9 4l4 4-4 4"/>
+                        </svg>
+                    </a>
+                    <a href="#methodology" class="btn-outline-action hero-btn-secondary">
+                        <span>Inspect Methodology</span>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75">
+                            <path d="M8 3v10M4 9l4 4 4-4"/>
+                        </svg>
+                    </a>
+                </div>
+
+                <!-- Quick Specimen Test Selectors -->
+                <div class="specimen-quick-select">
+                    <span class="specimen-label">Sample Field Specimens:</span>
+                    <div class="specimen-chips">
+                        <a href="/diagnose?crop=Potato" class="specimen-chip">
+                            <span class="chip-tag">SOL-01</span>
+                            <span>Potato Early Blight</span>
+                        </a>
+                        <a href="/diagnose?crop=Tomato" class="specimen-chip">
+                            <span class="chip-tag">SOL-02</span>
+                            <span>Tomato Septoria Spot</span>
+                        </a>
+                        <a href="/diagnose?crop=Pepper" class="specimen-chip">
+                            <span class="chip-tag">SOL-03</span>
+                            <span>Bell Pepper Healthy</span>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Right Inspection Chamber -->
+            <div class="hero-visual-col">
+                <div class="inspection-chamber">
+                    <div class="chamber-header">
+                        <div class="chamber-meta">
+                            <span class="mono-data">SPECIMEN-ID: SOL-POT-4019</span>
+                            <span>•</span>
+                            <span>POTATO FOLIAR SCAN</span>
+                        </div>
+                        <span class="status-label mono-data" style="color: var(--accent);">CALIBRATED</span>
+                    </div>
+
+                    <div class="chamber-viewport">
+                        <img src="/static/images/hero-leaf.jpg" alt="Foliar tissue under neural inspection" class="chamber-image" id="chamberLeafImage">
+                        
+                        <!-- Technical Reticles -->
+                        <div class="reticle-corner reticle-tl" aria-hidden="true"></div>
+                        <div class="reticle-corner reticle-tr" aria-hidden="true"></div>
+                        <div class="reticle-corner reticle-bl" aria-hidden="true"></div>
+                        <div class="reticle-corner reticle-br" aria-hidden="true"></div>
+                        <div class="reticle-crosshair" aria-hidden="true"></div>
+                    </div>
+
+                    <!-- Chamber Telemetry Matrix -->
+                    <div class="chamber-telemetry-grid">
+                        <div class="telemetry-cell">
+                            <div class="telemetry-key">Pathogen Match</div>
+                            <div class="telemetry-val highlight" id="chamberPathogen">Alternaria solani</div>
+                        </div>
+                        <div class="telemetry-cell">
+                            <div class="telemetry-key">Model Confidence</div>
+                            <div class="telemetry-val" id="chamberConfidence">94.8%</div>
+                        </div>
+                        <div class="telemetry-cell">
+                            <div class="telemetry-key">Foliar Necrosis</div>
+                            <div class="telemetry-val" id="chamberNecrosis">28.4% Area</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== TELEMETRY STRIP ========== -->
+<div class="telemetry-strip" aria-label="System Telemetry">
+    <div class="container">
+        <div class="telemetry-strip-grid">
+            <div class="metric-node">
+                <div class="metric-val">15</div>
+                <div class="metric-lbl">Taxonomic Classes</div>
+                <div class="metric-sub">Trained Solanaceae foliar pathogens & healthy baseline</div>
+            </div>
+            <div class="metric-node">
+                <div class="metric-val">224×224</div>
+                <div class="metric-lbl">Tensor Resolution</div>
+                <div class="metric-sub">ImageNet standardized chromatic normalization</div>
+            </div>
+            <div class="metric-node">
+                <div class="metric-val">Grad-CAM</div>
+                <div class="metric-lbl">Visual Explainability</div>
+                <div class="metric-sub">Gradient-weighted activation mapping via backpropagation</div>
+            </div>
+            <div class="metric-node">
+                <div class="metric-val">26+ Rules</div>
+                <div class="metric-lbl">Agronomic Inference</div>
+                <div class="metric-sub">Thermal & hygrometric multi-factor forward-chaining</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- ========== ASYMMETRIC METHODOLOGY PIPELINE ========== -->
+<section class="section-editorial" id="methodology">
+    <div class="container">
+        <div class="section-editorial-header">
+            <div class="section-tag">Analytical Pipeline</div>
+            <h2 class="section-h2">Three distinct layers of diagnostic reasoning</h2>
+            <p class="section-lead">
+                Unlike uncalibrated black-box classifiers, our diagnostic pipeline decomposes 
+                pathology into verified anatomical evidence.
+            </p>
+        </div>
+
+        <div class="methodology-layout">
+            <!-- Left Sticky Progress Rail -->
+            <aside class="methodology-sticky-rail" aria-label="Pipeline Stages">
+                <div class="rail-title">Diagnostic Phases</div>
+                <ol class="pipeline-stepper">
+                    <li class="step-item active">
+                        <span class="step-num">01</span>
+                        <span>Neural Feature Extraction</span>
+                    </li>
+                    <li class="step-item">
+                        <span class="step-num">02</span>
+                        <span>Color-Space Tissue Quantification</span>
+                    </li>
+                    <li class="step-item">
+                        <span class="step-num">03</span>
+                        <span>Expert Rule Forward-Chaining</span>
+                    </li>
+                </ol>
+            </aside>
+
+            <!-- Right Varied Method Blocks -->
+            <div class="method-stack">
+                <!-- Block 1: Neural Feature Extraction -->
+                <article class="method-block-wide">
+                    <div class="method-block-head">
+                        <div>
+                            <h3 class="method-title">01. Deep Spectral Feature Extraction & Attribution</h3>
+                            <p class="method-desc">
+                                The specimen is processed through a convolutional transfer learning backbone 
+                                (MobileNetV2 / ResNet50). Before presenting a verdict, Grad-CAM calculates 
+                                the gradient of the top-predicted class score with respect to the final convolutional 
+                                feature maps, guaranteeing that the model attended to foliar lesions rather than background soil or artifacts.
+                            </p>
+                        </div>
+                        <span class="method-tag">Convolutional Core</span>
+                    </div>
+
+                    <div class="neural-visual-canvas">
+                        <div class="canvas-panel">
+                            <span class="canvas-panel-title">Stage A: Raw Tensor</span>
+                            <span class="canvas-panel-body">224×224 RGB input tensor normalized by channel-wise mean and variance.</span>
+                        </div>
+                        <div class="canvas-panel active-panel">
+                            <span class="canvas-panel-title">Stage B: Feature Maps</span>
+                            <span class="canvas-panel-body">High-level spatial activation in terminal convolutional bottleneck.</span>
+                        </div>
+                        <div class="canvas-panel">
+                            <span class="canvas-panel-title">Stage C: Visual Attribution</span>
+                            <span class="canvas-panel-body">Rectified activation heatmap overlay highlighting necrotic tissue margins.</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Block 2: Pixel-Level Severity Analysis -->
+                <article class="method-block-split">
+                    <div>
+                        <div class="method-block-head">
+                            <h3 class="method-title">02. HSV Color-Space Tissue Quantification</h3>
+                            <span class="method-tag">Biometric Vision</span>
+                        </div>
+                        <p class="method-desc">
+                            Diagnostic decisions require understanding the severity of tissue destruction. 
+                            The system segments healthy photosynthetic tissue from necrotic, chlorotic, and fungal lesion zones 
+                            using mathematical color-space thresholding to output an exact percentage of leaf damage.
+                        </p>
+                    </div>
+
+                    <div class="severity-meter-preview">
+                        <div class="telemetry-key">Live Gauge Simulation</div>
+                        <div class="telemetry-val" style="font-size: 1.75rem; margin-top: 4px;">28.4% <span style="font-size: var(--text-sm); color: var(--accent); font-weight: normal;">(Moderate Blight)</span></div>
+                        <div class="meter-track">
+                            <div class="meter-fill" style="width: 48%;"></div>
+                        </div>
+                        <div class="meter-labels">
+                            <span>Healthy (0%)</span>
+                            <span>Mild (10%)</span>
+                            <span>Moderate (30%)</span>
+                            <span>Severe (60%)</span>
+                        </div>
+                    </div>
+                </article>
+
+                <!-- Block 3: Expert Rule Ledger Table -->
+                <article class="method-block-table">
+                    <div class="method-block-head">
+                        <div>
+                            <h3 class="method-title">03. Forward-Chaining Agronomic Risk Engine</h3>
+                            <p class="method-desc">
+                                AI classification is combined with micro-climate variables (relative humidity, ambient temperature, 
+                                precipitation volume, and crop growth stage). Prioritized inference rules determine spread probability 
+                                and prescribe precise organic and synthetic chemical regimens.
+                            </p>
+                        </div>
+                        <span class="method-tag">Rule Engine</span>
+                    </div>
+
+                    <table class="ledger-table" aria-label="Sample Inference Rules">
+                        <thead>
+                            <tr>
+                                <th>Inference Rule</th>
+                                <th>Environmental Fact Trigger</th>
+                                <th>Impact on Urgency</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td class="rule-name">high_humidity_fungal_spread</td>
+                                <td>Relative Humidity &gt; 80% &amp; Pathogen == Fungus</td>
+                                <td class="rule-weight">+40% Risk Escalation</td>
+                            </tr>
+                            <tr>
+                                <td class="rule-name">flowering_stage_vulnerability</td>
+                                <td>Growth Stage == Flowering</td>
+                                <td class="rule-weight">1.0x Full Vulnerability</td>
+                            </tr>
+                            <tr>
+                                <td class="rule-name">moderate_rainfall_dispersion</td>
+                                <td>Precipitation == Moderate / Heavy</td>
+                                <td class="rule-weight">Foliar Splash Dispersal Triggered</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </article>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== INTERACTIVE SPECIMEN SANDBOX ========== -->
+<section class="sandbox-section" id="sandbox">
+    <div class="container">
+        <div class="section-editorial-header">
+            <div class="section-tag">Interactive Sandbox</div>
+            <h2 class="section-h2">Simulate micro-climate risk variations in real-time</h2>
+            <p class="section-lead">
+                Adjust the environmental sliders below to observe how ambient humidity and temperature 
+                directly alter pathogen spread velocity and risk levels according to the expert system.
+            </p>
+        </div>
+
+        <div class="sandbox-container">
+            <!-- Controls -->
+            <div class="sandbox-controls">
+                <div class="control-group">
+                    <div class="control-header">
+                        <span class="control-name">Relative Humidity (%)</span>
+                        <span class="control-val" id="humidityVal">75%</span>
+                    </div>
+                    <input type="range" min="30" max="95" value="75" class="sandbox-slider" id="humiditySlider" aria-label="Relative Humidity Slider">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span class="control-name">Ambient Temperature (°C)</span>
+                        <span class="control-val" id="tempVal">26°C</span>
+                    </div>
+                    <input type="range" min="10" max="38" value="26" class="sandbox-slider" id="tempSlider" aria-label="Ambient Temperature Slider">
+                </div>
+
+                <div class="control-group">
+                    <div class="control-header">
+                        <span class="control-name">Simulated Foliar Necrosis (% Area)</span>
+                        <span class="control-val" id="severityVal">32%</span>
+                    </div>
+                    <input type="range" min="5" max="85" value="32" class="sandbox-slider" id="severitySlider" aria-label="Simulated Severity Slider">
+                </div>
+            </div>
+
+            <!-- Readout Display -->
+            <div class="sandbox-display">
+                <div>
+                    <div class="sandbox-readout-title">Calculated Epidemiological Risk Score</div>
+                    <div class="sandbox-score-number" id="sandboxRiskScore" style="color: var(--accent);">56.4</div>
+                    <div class="sandbox-risk-badge" id="sandboxRiskBadge" style="background: var(--status-warning-bg); color: var(--status-warning); border: 1px solid var(--status-warning-border);">
+                        Elevated Risk
+                    </div>
+                </div>
+
+                <div style="margin-top: var(--space-6); padding-top: var(--space-4); border-top: 1px solid var(--border-subtle);">
+                    <div class="telemetry-key">Primary Contributing Driver</div>
+                    <div class="telemetry-val" id="sandboxDriver">Prolonged high humidity promotes fungal spore germination.</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<!-- ========== CALL TO ACTION ========== -->
+<section class="section-editorial" style="background-color: var(--canvas);">
+    <div class="container" style="text-align: center; max-width: 720px;">
+        <div class="section-tag" style="display: inline-block;">Field Deployment</div>
+        <h2 class="hero-h1" style="font-size: 2.25rem; margin-top: var(--space-2); margin-bottom: var(--space-4);">
+            Ready to evaluate field foliage?
+        </h2>
+        <p class="hero-body-p" style="margin: 0 auto var(--space-6);">
+            Upload a clear leaf photograph to initiate neural classification, Grad-CAM attribution, 
+            severity segmentation, and the complete agronomic treatment protocol.
+        </p>
+        <a href="/diagnose" class="btn-primary-action" style="padding: var(--space-3) var(--space-8); font-size: var(--text-base); display: inline-flex;">
+            <span>Open Diagnostic Console</span>
+            <svg width="16" height="16" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75">
+                <path d="M3 8h10M9 4l4 4-4 4"/>
+            </svg>
+        </a>
+    </div>
+</section>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/landing.js"></script>
+{% endblock %}

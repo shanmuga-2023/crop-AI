@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}CropAI Expert — Agronomic Pathology & Diagnostic Engine{% endblock %}</title>
+    <meta name="description" content="{% block meta_description %}Precision foliar pathology diagnosis platform integrating deep neural networks, Grad-CAM explainability, pixel-level severity quantification, and rule-based agronomic decision support.{% endblock %}">
+    
+    <!-- Distinctive Typography: Newsreader (Editorial Serif), Plus Jakarta Sans (Clean Body), JetBrains Mono (Data/Metrics) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;0,6..72,700;1,6..72,400&family=Plus+Jakarta+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <link rel="stylesheet" href="/static/css/style.css">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="site-body">
+    <!-- Clinical Diagnostic Header -->
+    <header class="site-header" id="siteHeader">
+        <div class="header-inner">
+            <a href="/" class="brand-badge" aria-label="CropAI Pathology Workbench Home">
+                <span class="brand-mark" aria-hidden="true">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12A10 10 0 0 1 12 2z"></path>
+                        <path d="M12 6v12"></path>
+                        <path d="M6 12h12"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                </span>
+                <span class="brand-text">
+                    <span class="brand-title">CropAI</span>
+                    <span class="brand-sub">Pathology Workbench</span>
+                </span>
+            </a>
+
+            <!-- System Live Status Pill -->
+            <div class="system-status-pill" id="systemStatusPill" title="Neural classification engine status">
+                <span class="status-indicator"></span>
+                <span class="status-label">Solanaceae Core Active</span>
+            </div>
+
+            <!-- Primary Navigation Links -->
+            <nav class="primary-nav" id="primaryNav" aria-label="Main Navigation">
+                <ul class="nav-menu">
+                    <li>
+                        <a href="/" class="nav-item {% if request.path == '/' %}active{% endif %}">
+                            <span class="nav-num">01</span>
+                            <span class="nav-label">Overview</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/diagnose" class="nav-item {% if request.path == '/diagnose' %}active{% endif %}">
+                            <span class="nav-num">02</span>
+                            <span class="nav-label">Diagnosis Lab</span>
+                        </a>
+                    </li>
+                    <li>
+                        <a href="/history" class="nav-item {% if request.path == '/history' %}active{% endif %}">
+                            <span class="nav-num">03</span>
+                            <span class="nav-label">Case Archive</span>
+                        </a>
+                    </li>
+                </ul>
+            </nav>
+
+            <!-- Direct Action Trigger -->
+            <div class="header-actions">
+                <a href="/diagnose" class="btn-primary-action">
+                    <span>Evaluate Specimen</span>
+                    <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75">
+                        <path d="M3 8h10M9 4l4 4-4 4"/>
+                    </svg>
+                </a>
+                <button class="mobile-nav-toggle" id="mobileNavToggle" aria-label="Toggle Navigation Menu" aria-expanded="false">
+                    <span class="toggle-bar"></span>
+                    <span class="toggle-bar"></span>
+                </button>
+            </div>
+        </div>
+
+        <!-- Mobile Navigation Drawer -->
+        <div class="mobile-drawer" id="mobileDrawer" aria-hidden="true">
+            <ul class="mobile-menu">
+                <li><a href="/" class="mobile-item {% if request.path == '/' %}active{% endif %}">Overview</a></li>
+                <li><a href="/diagnose" class="mobile-item {% if request.path == '/diagnose' %}active{% endif %}">Diagnosis Lab</a></li>
+                <li><a href="/history" class="mobile-item {% if request.path == '/history' %}active{% endif %}">Case Archive</a></li>
+                <li class="mobile-drawer-cta">
+                    <a href="/diagnose" class="btn-primary-action full-width">Evaluate Specimen →</a>
+                </li>
+            </ul>
+        </div>
+    </header>
+
+    <!-- Main Viewport -->
+    <main id="mainContent" class="main-viewport">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- Technical Footer -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            <div class="footer-meta">
+                <span class="footer-brand">CropAI Expert</span>
+                <span class="footer-dot">•</span>
+                <span>Foliar Pathology Decision Engine</span>
+                <span class="footer-dot">•</span>
+                <span class="mono-data">ResNet50 / MobileNetV2 + Grad-CAM + Forward Chaining</span>
+            </div>
+            <div class="footer-links">
+                <a href="/diagnose" class="footer-link">Diagnosis Console</a>
+                <a href="/history" class="footer-link">Archive</a>
+                <a href="/api/model-info" target="_blank" class="footer-link mono-data">API Metadata ↗</a>
+            </div>
+        </div>
+    </footer>
+
+    {% block scripts %}{% endblock %}
+
+    <!-- Mobile Drawer & Header Scripts -->
+    <script>
+        (function() {
+            const toggle = document.getElementById('mobileNavToggle');
+            const drawer = document.getElementById('mobileDrawer');
+            if (toggle && drawer) {
+                toggle.addEventListener('click', function() {
+                    const expanded = toggle.getAttribute('aria-expanded') === 'true';
+                    toggle.setAttribute('aria-expanded', !expanded);
+                    toggle.classList.toggle('open');
+                    drawer.classList.toggle('open');
+                    drawer.setAttribute('aria-hidden', expanded);
+                });
+            }
+
+            // Subtle header border accent on scroll
+            const header = document.getElementById('siteHeader');
+            window.addEventListener('scroll', function() {
+                if (window.scrollY > 20) {
+                    header.classList.add('scrolled');
+                } else {
+                    header.classList.remove('scrolled');
+                }
+            }, { passive: true });
+        })();
+    </script>
+</body>
+</html>

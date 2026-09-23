@@ -1,0 +1,172 @@
+{% extends "base.html" %}
+
+{% block title %}Case Archive — CropAI Pathology Workbench{% endblock %}
+{% block meta_description %}Historical repository of foliar pathology diagnoses, severity telemetry, and epidemiological risk evaluations.{% endblock %}
+
+{% block content %}
+<div class="history-viewport">
+    <div class="container">
+        <!-- Archive Header -->
+        <header class="console-header">
+            <div>
+                <h1 class="console-h1">Pathology Case Archive</h1>
+                <p class="console-sub">Chronological ledger of submitted specimens and expert assessments</p>
+            </div>
+            <div class="console-meta-stats">
+                <a href="/diagnose" class="btn-primary-action" style="padding: var(--space-2) var(--space-4); font-size: var(--text-xs);">
+                    <span>+ New Examination</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Dynamic Container -->
+        <div id="historyContainer">
+            <div class="results-empty-state" id="historyLoading" style="padding: var(--space-12);">
+                <div class="mono-data" style="color: var(--accent); font-size: var(--text-sm);">QUERYING ARCHIVE DATABASE...</div>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: var(--space-8); display: none;" id="loadMoreWrapper">
+            <button type="button" class="btn-outline-action" id="loadMoreBtn" onclick="loadMore()">
+                Load Older Cases ↓
+            </button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+    let currentOffset = 0;
+    const pageSize = 25;
+
+    document.addEventListener('DOMContentLoaded', () => loadHistory());
+
+    async function loadHistory() {
+        try {
+            const res = await fetch(`/api/history?limit=${pageSize}&offset=${currentOffset}`);
+            const data = await res.json();
+
+            const container = document.getElementById('historyContainer');
+            const loading = document.getElementById('historyLoading');
+            const loadMoreWrapper = document.getElementById('loadMoreWrapper');
+
+            if (loading) loading.remove();
+
+            if ((!data.diagnoses || data.diagnoses.length === 0) && currentOffset === 0) {
+                container.innerHTML = `
+                    <div class="results-empty-state">
+                        <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+                            <polyline points="14 2 14 8 20 8"/>
+                            <line x1="16" y1="13" x2="8" y2="13"/>
+                            <line x1="16" y1="17" x2="8" y2="17"/>
+                            <polyline points="10 9 9 9 8 9"/>
+                        </svg>
+                        <h3 class="empty-state-h3">No Diagnostic Records in Archive</h3>
+                        <p class="empty-state-p">
+                            Specimens analyzed in the Diagnosis Lab are automatically cataloged with their neural weights, 
+                            Grad-CAM heatmaps, and environmental factors here.
+                        </p>
+                        <div style="margin-top: var(--space-4);">
+                            <a href="/diagnose" class="btn-primary-action">Launch First Diagnosis →</a>
+                        </div>
+                    </div>
+                `;
+                return;
+            }
+
+            let table = document.getElementById('historyTable');
+            if (!table) {
+                const tableWrapper = document.createElement('div');
+                tableWrapper.className = 'history-table-container';
+                tableWrapper.innerHTML = `
+                    <table class="history-table" id="historyTable">
+                        <thead>
+                            <tr>
+                                <th>Specimen</th>
+                                <th>Diagnosed Pathogen</th>
+                                <th>Crop Genus</th>
+                                <th>Confidence</th>
+                                <th>Necrosis Area</th>
+                                <th>Risk Index</th>
+                                <th>Timestamp</th>
+                                <th>Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="historyTbody"></tbody>
+                    </table>
+                `;
+                container.appendChild(tableWrapper);
+            }
+
+            const tbody = document.getElementById('historyTbody');
+
+            data.diagnoses.forEach(d => {
+                const tr = document.createElement('tr');
+
+                const riskColor = {
+                    low: 'var(--status-healthy)',
+                    moderate: 'var(--accent)',
+                    high: 'var(--status-warning)',
+                    critical: 'var(--status-danger)'
+                }[d.risk_level] || 'var(--text-muted)';
+
+                const timestamp = new Date(d.timestamp).toLocaleDateString('en-US', {
+                    month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit'
+                });
+
+                const thumbSrc = d.image_filename ? `/uploads/${d.image_filename}` : '/static/images/hero-leaf.jpg';
+
+                tr.innerHTML = `
+                    <td>
+                        <img src="${thumbSrc}" alt="Foliar thumbnail" class="history-thumb"
+                             onerror="this.src='/static/images/hero-leaf.jpg';">
+                    </td>
+                    <td>
+                        <strong style="color: var(--text-primary); font-family: var(--font-heading); font-size: var(--text-base);">${d.disease_display_name || d.predicted_disease}</strong>
+                        ${d.mock_mode ? '<span class="status-label mono-data" style="font-size: 10px; margin-left: 6px; color: var(--accent);">DEMO</span>' : ''}
+                    </td>
+                    <td class="mono-data">${d.crop_type || 'Solanaceae'}</td>
+                    <td class="mono-data" style="color: var(--accent); font-weight: 600;">
+                        ${(d.confidence * 100).toFixed(1)}%
+                    </td>
+                    <td class="mono-data">
+                        ${d.severity_percentage ? d.severity_percentage.toFixed(1) + '%' : '—'}
+                    </td>
+                    <td>
+                        <span class="mono-data" style="color: ${riskColor}; font-weight: 600;">
+                            ${d.risk_score ? d.risk_score.toFixed(1) : '—'}
+                        </span>
+                        <span style="font-size: 11px; text-transform: uppercase; color: var(--text-muted); margin-left: 4px;">
+                            (${d.risk_level || 'N/A'})
+                        </span>
+                    </td>
+                    <td class="mono-data" style="font-size: var(--text-xs); color: var(--text-muted);">
+                        ${timestamp}
+                    </td>
+                    <td>
+                        <a href="/diagnose" class="history-btn-view">New Run →</a>
+                    </td>
+                `;
+
+                tbody.appendChild(tr);
+            });
+
+            currentOffset += data.diagnoses.length;
+            if (data.diagnoses.length >= pageSize && loadMoreWrapper) {
+                loadMoreWrapper.style.display = 'block';
+            } else if (loadMoreWrapper) {
+                loadMoreWrapper.style.display = 'none';
+            }
+
+        } catch (err) {
+            console.error('Failed to load diagnosis archive:', err);
+        }
+    }
+
+    function loadMore() {
+        loadHistory();
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,45 @@
+# Environments
+venv/
+env/
+ENV/
+.env
+.venv
+
+# Datasets
+PlantVillage/
+dataset/
+datasets/
+data/
+
+# Local databases
+database/*.db
+*.sqlite3
+*.db
+
+# Uploaded test files (keep directory structure)
+uploads/*
+!uploads/.gitkeep
+
+# Grad-CAM runtime generated outputs
+static/gradcam_outputs/*
+!static/gradcam_outputs/.gitkeep
+
+# Python bytecode & cache
+__pycache__/
+*.py[cod]
+*$py.class
+.pytest_cache/
+.coverage
+htmlcov/
+
+# macOS / OS files
+.DS_Store
+.AppleDouble
+.LSOverride
+Thumbs.db
+
+# IDE & editors
+.vscode/
+.idea/
+*.swp
+*.swo

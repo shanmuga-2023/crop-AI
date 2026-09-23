@@ -1,0 +1,265 @@
+{% extends "base.html" %}
+
+{% block title %}Diagnosis Lab — CropAI Pathology Workbench{% endblock %}
+{% block meta_description %}Foliar diagnostic workbench integrating deep learning inference, Grad-CAM visual heatmaps, pixel-level severity quantification, and rule-based agronomic recommendations.{% endblock %}
+
+{% block content %}
+<div class="diagnosis-viewport">
+    <div class="container">
+        <!-- Console Header -->
+        <header class="console-header">
+            <div>
+                <h1 class="console-h1">Foliar Diagnosis &amp; Pathology Console</h1>
+                <p class="console-sub">Submit high-resolution leaf photographs for multi-layer pathology inspection</p>
+            </div>
+            <div class="console-meta-stats">
+                <span>BACKBONE: <strong style="color: var(--text-primary);">TRANSFER CNN</strong></span>
+                <span>•</span>
+                <span>CLASSES: <strong style="color: var(--accent);">15 SOLANACEAE</strong></span>
+                <span>•</span>
+                <span>ATTRIBUTION: <strong style="color: var(--text-primary);">GRAD-CAM</strong></span>
+            </div>
+        </header>
+
+        <!-- Two-column Workbench -->
+        <div class="diagnosis-grid">
+            <!-- LEFT: Upload & Environmental Input Workstation -->
+            <aside class="upload-workstation" aria-label="Specimen Input Station">
+                <div class="workstation-title">
+                    <span>Input Parameters</span>
+                    <span class="mono-data">STEP 01</span>
+                </div>
+
+                <!-- Drop Chamber -->
+                <div class="drop-chamber" id="dropChamber" tabindex="0" role="button" aria-label="Upload leaf image">
+                    <div id="dropPlaceholder">
+                        <svg class="drop-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                            <circle cx="8.5" cy="8.5" r="1.5"/>
+                            <polyline points="21 15 16 10 5 21"/>
+                        </svg>
+                        <div class="drop-label-main">Drop leaf specimen here</div>
+                        <div class="drop-label-hint">or click to browse • JPG, PNG, WebP</div>
+                    </div>
+
+                    <div class="preview-container" id="previewContainer">
+                        <img class="preview-image" id="previewImage" alt="Leaf specimen preview">
+                        <button type="button" class="preview-clear-btn" id="previewClearBtn" title="Clear image">Change Specimen</button>
+                    </div>
+                </div>
+                <input type="file" id="fileInput" accept=".jpg,.jpeg,.png,.webp,.bmp" style="display:none" aria-hidden="true">
+
+                <!-- Sample Leaf Shortcuts -->
+                <div class="sample-specimen-bar">
+                    <span class="sample-label">Quick Test:</span>
+                    <button type="button" class="sample-btn" data-crop="Potato" data-sample="potato_early_blight">Potato Leaf</button>
+                    <button type="button" class="sample-btn" data-crop="Pepper" data-sample="pepper_healthy">Pepper Leaf</button>
+                </div>
+
+                <!-- Conditions Form -->
+                <form id="diagnosisForm" class="conditions-form" novalidate>
+                    <div class="form-field">
+                        <label class="field-label" for="cropType">Crop Genus (Optional)</label>
+                        <select class="field-select" id="cropType" name="crop_type">
+                            <option value="">Auto-detect genus</option>
+                            {% for crop in crops %}
+                            <option value="{{ crop }}">{{ crop }}</option>
+                            {% endfor %}
+                        </select>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-field">
+                            <label class="field-label" for="humidity">Relative Humidity (%)</label>
+                            <input type="number" class="field-input" id="humidity" name="humidity"
+                                   placeholder="e.g. 78" min="0" max="100">
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label" for="temperature">Ambient Temp (°C)</label>
+                            <input type="number" class="field-input" id="temperature" name="temperature"
+                                   placeholder="e.g. 26" min="-10" max="55">
+                        </div>
+                    </div>
+
+                    <div class="form-row-2">
+                        <div class="form-field">
+                            <label class="field-label" for="rainfall">Precipitation Volume</label>
+                            <select class="field-select" id="rainfall" name="rainfall">
+                                <option value="">Not specified</option>
+                                <option value="dry">Dry</option>
+                                <option value="light">Light</option>
+                                <option value="moderate">Moderate</option>
+                                <option value="moderate_to_heavy">Moderate to Heavy</option>
+                                <option value="heavy">Heavy</option>
+                            </select>
+                        </div>
+                        <div class="form-field">
+                            <label class="field-label" for="growthStage">Phenological Stage</label>
+                            <select class="field-select" id="growthStage" name="growth_stage">
+                                <option value="">Not specified</option>
+                                {% for stage in growth_stages %}
+                                <option value="{{ stage }}">{{ stage|capitalize }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Error Banner -->
+                    <div id="formErrorMessage" style="display:none; color: var(--status-danger); font-size: var(--text-xs); font-family: var(--font-mono); padding: var(--space-2); background: var(--status-danger-bg); border: 1px solid var(--status-danger-border); border-radius: var(--radius-sm);"></div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" class="btn-submit-diagnosis" id="analyzeBtn" disabled>
+                        <span>Execute Pathology Analysis</span>
+                        <svg width="14" height="14" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.75">
+                            <path d="M3 8h10M9 4l4 4-4 4"/>
+                        </svg>
+                    </button>
+                </form>
+            </aside>
+
+            <!-- RIGHT: Clinical Diagnostic Dossier -->
+            <section class="results-workstation" aria-label="Diagnostic Dossier" aria-live="polite">
+                <!-- State 1: Empty Initial State -->
+                <div class="results-empty-state" id="emptyState">
+                    <svg class="empty-state-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+                        <path d="M12 2a10 10 0 0 1 10 10c0 5.5-4.5 10-10 10S2 17.5 2 12A10 10 0 0 1 12 2z"/>
+                        <path d="M12 8v4M12 16h.01"/>
+                    </svg>
+                    <h3 class="empty-state-h3">No Specimen Queued for Analysis</h3>
+                    <p class="empty-state-p">
+                        Drop or select a leaf specimen on the left workstation. The pipeline will automatically 
+                        extract features, compute Grad-CAM attribution, calculate damaged foliar area, and evaluate agronomic risk.
+                    </p>
+                </div>
+
+                <!-- State 2: Active Pipeline Checklist (No generic spinner) -->
+                <div class="diagnostic-loading-card" id="loadingCard">
+                    <div class="loading-header">
+                        <span class="loading-title">DIAGNOSTIC PIPELINE RUNNING</span>
+                        <span class="mono-data" id="pipelineTimer">PROCESSING...</span>
+                    </div>
+
+                    <ol class="pipeline-checklist">
+                        <li class="pipeline-step in-progress" id="stepClassification">
+                            <span class="step-dot"></span>
+                            <span>Phase 1: Deep Convolutional Classification &amp; Tensor Calibration</span>
+                        </li>
+                        <li class="pipeline-step" id="stepGradcam">
+                            <span class="step-dot"></span>
+                            <span>Phase 2: Gradient-Weighted Attribution Mapping (Grad-CAM)</span>
+                        </li>
+                        <li class="pipeline-step" id="stepSeverity">
+                            <span class="step-dot"></span>
+                            <span>Phase 3: Color-Space Tissue Quantification &amp; Lesion Masking</span>
+                        </li>
+                        <li class="pipeline-step" id="stepExpert">
+                            <span class="step-dot"></span>
+                            <span>Phase 4: Forward-Chaining Micro-Climate Risk Evaluation</span>
+                        </li>
+                    </ol>
+                </div>
+
+                <!-- State 3: Populated Diagnostic Dossier -->
+                <div class="results-dossier" id="resultsDossier">
+                    <!-- Primary Verdict Banner -->
+                    <div class="verdict-banner" id="verdictBanner">
+                        <div class="verdict-lead">
+                            <span class="verdict-tag" id="verdictCropTag">SOLANACEAE VERDICT</span>
+                            <h2 class="verdict-name" id="verdictDiseaseName">Potato Early Blight</h2>
+                            <span class="verdict-scientific" id="verdictScientific">Alternaria solani</span>
+                        </div>
+                        <div class="verdict-score-badge">
+                            <span class="verdict-confidence-pct" id="verdictConfidence">94.8%</span>
+                            <span class="verdict-confidence-lbl">Neural Confidence</span>
+                        </div>
+                    </div>
+
+                    <!-- Visual Explanation Dock -->
+                    <div class="visual-dock-card">
+                        <div class="dock-header">
+                            <span class="dock-title">Foliar Visual Attribution</span>
+                            <div class="dock-tabs" role="tablist">
+                                <button type="button" class="dock-tab-btn active" data-view="overlay" role="tab">Grad-CAM Overlay</button>
+                                <button type="button" class="dock-tab-btn" data-view="heatmap" role="tab">Raw Heatmap</button>
+                                <button type="button" class="dock-tab-btn" data-view="original" role="tab">Original Specimen</button>
+                            </div>
+                        </div>
+
+                        <div class="dock-stage-viewport">
+                            <img src="" alt="Diagnostic view" class="dock-view-img" id="dockMainImage">
+                        </div>
+
+                        <div class="dock-caption">
+                            <span id="dockCaptionText">Visual evidence: Red/amber zones represent tissue regions driving model activation.</span>
+                            <span class="mono-data" id="dockModelTag">ATTRIBUTION: CONV_HEAD</span>
+                        </div>
+                    </div>
+
+                    <!-- Dual Metrics Strip: Severity + Risk -->
+                    <div class="dual-metrics-grid">
+                        <!-- Metric 1: Tissue Necrosis -->
+                        <div class="metric-card">
+                            <div class="metric-card-header">
+                                <span>Foliar Severity Ratio</span>
+                                <span id="severityLevelBadge" class="mono-data">MODERATE</span>
+                            </div>
+                            <div class="metric-card-val" id="severityPctVal">28.4%</div>
+                            <div class="metric-card-bar">
+                                <div class="metric-card-fill" id="severityBarFill" style="width: 28.4%;"></div>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: var(--space-2);">
+                                <span id="diseasedPixelsVal">Infected: 11,400 px</span>
+                                <span id="healthyPixelsVal">Healthy: 28,600 px</span>
+                            </div>
+                        </div>
+
+                        <!-- Metric 2: Epidemiological Risk Score -->
+                        <div class="metric-card">
+                            <div class="metric-card-header">
+                                <span>Micro-Climate Risk Index</span>
+                                <span id="riskLevelBadge" class="mono-data">ELEVATED</span>
+                            </div>
+                            <div class="metric-card-val" id="riskScoreVal">56.0</div>
+                            <div class="metric-card-bar">
+                                <div class="metric-card-fill" id="riskBarFill" style="width: 56%; background: var(--accent);"></div>
+                            </div>
+                            <div style="font-size: 11px; color: var(--text-muted); font-family: var(--font-mono); margin-top: var(--space-2);">
+                                <span id="actionUrgencyVal">Action Protocol: Immediate Targeted Treatment</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Recommendations Action Ledger -->
+                    <div class="recommendations-card">
+                        <div class="rec-title">Agronomic Management Protocol</div>
+                        
+                        <ul class="rec-actions-list" id="immediateActionsList">
+                            <!-- Injected via JavaScript -->
+                        </ul>
+
+                        <!-- Treatment Dual Accordion (Organic vs Chemical) -->
+                        <div class="treatment-grid">
+                            <div class="treatment-col">
+                                <div class="treatment-col-header" style="color: var(--status-healthy);">Organic / Biological Countermeasures</div>
+                                <ul class="treatment-list" id="organicTreatmentList">
+                                    <!-- Injected via JavaScript -->
+                                </ul>
+                            </div>
+                            <div class="treatment-col">
+                                <div class="treatment-col-header" style="color: var(--accent);">Synthetic Chemical Controls</div>
+                                <ul class="treatment-list" id="chemicalTreatmentList">
+                                    <!-- Injected via JavaScript -->
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/js/app.js"></script>
+{% endblock %}
