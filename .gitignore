@@ -6,7 +6,6 @@ ENV/
 .venv
 
 # Datasets
-PlantVillage/
 dataset/
 datasets/
 data/
